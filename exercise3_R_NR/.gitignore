@@ -1,0 +1,4 @@
+.gzip
+data/
+gym/
+__pycache__/

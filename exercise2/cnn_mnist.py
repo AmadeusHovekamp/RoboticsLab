@@ -5,12 +5,12 @@ import gzip
 import json
 import os
 import pickle
-import shutil
 
 import numpy as np
 import tensorflow as tf
 
 # tf.logging.set_verbosity(tf.logging.DEBUG)
+
 
 def one_hot(labels):
     """this creates a one hot encoding from a flat vector:
@@ -48,15 +48,15 @@ def mnist(datasets_dir='./data'):
         train_set, valid_set, test_set = pickle.load(f)
     f.close()
 
-    #print(test_set[0].shape, test_set[1].shape)
-    #print(valid_set[0].shape, valid_set[1].shape)
-    #print(train_set[0].shape, train_set[1].shape)
-    #test_set = (test_set[0][:300], test_set[1][:300])
-    #valid_set = (valid_set[0][:300], valid_set[1][:300])
-    #train_set = (train_set[0][:300], train_set[1][:300])
-    #print(test_set[0].shape, test_set[1].shape)
-    #print(valid_set[0].shape, valid_set[1].shape)
-    #print(train_set[0].shape, train_set[1].shape)
+    # print(test_set[0].shape, test_set[1].shape)
+    # print(valid_set[0].shape, valid_set[1].shape)
+    # print(train_set[0].shape, train_set[1].shape)
+    # test_set = (test_set[0][:300], test_set[1][:300])
+    # valid_set = (valid_set[0][:300], valid_set[1][:300])
+    # train_set = (train_set[0][:300], train_set[1][:300])
+    # print(test_set[0].shape, test_set[1].shape)
+    # print(valid_set[0].shape, valid_set[1].shape)
+    # print(train_set[0].shape, train_set[1].shape)
 
     test_x, test_y = test_set
     test_x = test_x.astype('float32')
@@ -70,8 +70,9 @@ def mnist(datasets_dir='./data'):
     train_x = train_x.astype('float32').reshape(train_x.shape[0], 28, 28, 1)
     train_y = train_y.astype('int32')
     print('... done loading data')
-    
-    # return train_x, one_hot(train_y), valid_x, one_hot(valid_y), test_x, one_hot(test_y)
+
+    # return train_x, one_hot(train_y), valid_x, one_hot(valid_y),
+    # test_x, one_hot(test_y)
     return train_x, train_y, valid_x, valid_y, test_x, test_y
 
 
@@ -80,7 +81,7 @@ def create_cnn_model(features, labels, mode):
 
     # Input layer.
     layer_inputs = tf.reshape(features["x"], [-1, 28, 28, 1])
-    
+
     # First convolutional layer.
     layer_conv_1 = tf.layers.conv2d(inputs=layer_inputs,
                                     filters=num_filters,
@@ -110,21 +111,27 @@ def create_cnn_model(features, labels, mode):
     # Fully connected layer.
     layer_pool_2_flat = tf.contrib.layers.flatten(layer_pool_2)
 
-    layer_fully_connected = tf.layers.dense(inputs=layer_pool_2_flat, units=128, activation=tf.nn.relu)
+    layer_fully_connected = tf.layers.dense(inputs=layer_pool_2_flat,
+                                            units=128,
+                                            activation=tf.nn.relu)
 
     # Output layer.
-    layer_output_wo_softmax = tf.layers.dense(inputs=layer_fully_connected, units=10)
+    layer_output_wo_softmax = tf.layers.dense(inputs=layer_fully_connected,
+                                              units=10)
 
     predictions = {
         "classes": tf.argmax(input=layer_output_wo_softmax, axis=1),
-        "probabilities": tf.nn.softmax(layer_output_wo_softmax, name="softmax_tensor")
+        "probabilities": tf.nn.softmax(layer_output_wo_softmax,
+                                       name="softmax_tensor")
     }
 
     if mode == tf.estimator.ModeKeys.PREDICT:
         return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
 
     # Calculate loss
-    loss = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=layer_output_wo_softmax)    
+    loss = tf.losses.sparse_softmax_cross_entropy(
+                labels=labels,
+                logits=layer_output_wo_softmax)
 
     # Configure training.
     if mode == tf.estimator.ModeKeys.TRAIN:
@@ -132,18 +139,28 @@ def create_cnn_model(features, labels, mode):
         train_op = optimizer.minimize(
             loss=loss,
             global_step=tf.train.get_global_step())
-        return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
+        return tf.estimator.EstimatorSpec(
+                    mode=mode, loss=loss, train_op=train_op)
 
     # Evaluation metrics
-    eval_metric_ops = {"accuracy": tf.metrics.accuracy(labels=labels, predictions=predictions["classes"])}
-    return tf.estimator.EstimatorSpec(mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
-    
+    eval_metric_ops = {"accuracy": tf.metrics.accuracy(
+                labels=labels, predictions=predictions["classes"])}
+    return tf.estimator.EstimatorSpec(
+                mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
 
 
-def train_and_validate(x_train, y_train, x_valid, y_valid, num_epochs, lr, num_filters, batch_size, filter_size):
+def train_and_validate(x_train,
+                       y_train,
+                       x_valid,
+                       y_valid,
+                       num_epochs,
+                       lr,
+                       num_filters,
+                       batch_size,
+                       filter_size):
 
     # Empty working directory
-    model_dir="./tmp/mnist_convnet_model"
+    model_dir = "./tmp/mnist_convnet_model"
     if os.path.exists(model_dir):
         for f in os.listdir(model_dir):
             fp = os.path.join(model_dir, f)
@@ -154,13 +171,13 @@ def train_and_validate(x_train, y_train, x_valid, y_valid, num_epochs, lr, num_f
                     for f2 in os.listdir(fp):
                         fp2 = os.path.join(fp, f2)
                         os.remove(fp2)
-#                    shutil.rmtree(fp)
             except Exception as e:
                 print("ERROR", e)
                 pass
 
     # Create the Estimator
-    model = tf.estimator.Estimator(model_fn=create_cnn_model, model_dir=model_dir)
+    model = tf.estimator.Estimator(model_fn=create_cnn_model,
+                                   model_dir=model_dir)
 
     # Train the model
     train_input_fn = tf.estimator.inputs.numpy_input_fn(x={"x": x_train},
@@ -182,7 +199,7 @@ def train_and_validate(x_train, y_train, x_valid, y_valid, num_epochs, lr, num_f
 
 def validate(x_valid, y_valid, model):
     # Validates the network.
-    
+
     eval_input_fn = tf.estimator.inputs.numpy_input_fn(
         x={"x": x_valid},
         y=y_valid,
@@ -190,6 +207,7 @@ def validate(x_valid, y_valid, model):
     eval_results = model.evaluate(input_fn=eval_input_fn)
 
     return eval_results
+
 
 def test(x_test, y_test, model):
     # Test your network here by evaluating it on the test data.
@@ -203,16 +221,22 @@ if __name__ == "__main__":
     parser.add_argument("--output_path", default="./", type=str, nargs="?",
                         help="Path where the results will be stored")
     parser.add_argument("--input_path", default="./", type=str, nargs="?",
-                        help="Path where the data is located. If the data is not available it will be downloaded first")
-    parser.add_argument("--learning_rate", default=1e-3, type=float, nargs="?", help="Learning rate for SGD")
+                        help="Path where the data is located. If the data is \
+                        not available it will be downloaded first")
+    parser.add_argument("--learning_rate", default=1e-3, type=float, nargs="?",
+                        help="Learning rate for SGD")
     # Changed default value for num_filters from 32 to 16.
     parser.add_argument("--num_filters", default=16, type=int, nargs="?",
-                        help="The number of filters for each convolution layer")
-    parser.add_argument("--batch_size", default=128, type=int, nargs="?", help="Batch size for SGD")
+                        help="The number of filters \
+                        for each convolution layer")
+    parser.add_argument("--batch_size", default=128, type=int, nargs="?",
+                        help="Batch size for SGD")
     parser.add_argument("--epochs", default=12, type=int, nargs="?",
-                        help="Determines how many epochs the network will be trained")
+                        help="Determines how many epochs the network will be \
+                        trained")
     parser.add_argument("--run_id", default=0, type=int, nargs="?",
-                        help="Helps to identify different runs of an experiments")
+                        help="Helps to identify different runs of an \
+                        experiments")
     parser.add_argument("--filter_size", default=3, type=int, nargs="?",
                         help="Filter width and height")
     args = parser.parse_args()
@@ -227,7 +251,10 @@ if __name__ == "__main__":
     # train and test convolutional neural network
     x_train, y_train, x_valid, y_valid, x_test, y_test = mnist(args.input_path)
 
-    learning_curve, model = train_and_validate(x_train, y_train, x_valid, y_valid, epochs, lr, num_filters, batch_size, filter_size)
+    learning_curve, model = train_and_validate(x_train, y_train,
+                                               x_valid, y_valid,
+                                               epochs, lr, num_filters,
+                                               batch_size, filter_size)
 
     test_error = test(x_test, y_test, model)
 
