@@ -47,7 +47,7 @@ def save_results(episode_rewards, results_dir="./results"):
 
     results["mean_all_episodes"] = np.array(episode_rewards).mean()
     results["std_all_episodes"] = np.array(episode_rewards).std()
- 
+
     fname = os.path.join(results_dir, "results_manually-%s.json" % datetime.now().strftime("%Y%m%d-%H%M%S"))
     fh = open(fname, "w")
     json.dump(results, fh)
@@ -77,7 +77,6 @@ if __name__ == "__main__":
 
 
     a = np.array([0.0, 0.0, 0.0]).astype('float32')
-    
     episode_rewards = []
     steps = 0
     while True:
@@ -93,7 +92,7 @@ if __name__ == "__main__":
             samples["next_state"].append(next_state)
             samples["reward"].append(r)
             samples["terminal"].append(done)
-            
+
             state = next_state
             steps += 1
 
@@ -107,13 +106,9 @@ if __name__ == "__main__":
                 save_results(episode_rewards, "./results")
 
             env.render()
-            if done: 
+            if done:
                 break
-        
+
         episode_rewards.append(episode_reward)
 
     env.close()
-
-    
-
-   

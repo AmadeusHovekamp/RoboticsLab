@@ -1,0 +1,5 @@
+"18": {"config_id": [18, 0, 0], "budget": 6, "loss": 0.009999990463256836, "time_stamps": "3797.340497493744 (submitted), 3797.340662956238 (started), 3931.7283506393433 (finished)\n", "info": {}}, 
+"19": {"config_id": [19, 0, 0], "budget": 6, "loss": 0.07400000095367432, "time_stamps": "3931.7294223308563 (submitted), 3931.729552268982 (started), 4060.6416952610016 (finished)\n", "info": {}},
+"20": {"config_id": [20, 0, 0], "budget": 6, "loss": 0.017400026321411133, "time_stamps": "4060.6431329250336 (submitted), 4060.643215894699 (started), 4502.685225248337 (finished)\n", "info": {}},
+"21": {"config_id": [21, 0, 0], "budget": 6, "loss": 0.013499975204467773, "time_stamps": "4502.686817169189 (submitted), 4502.686951160431 (started), 4626.639290094376 (finished)\n", "info": {}},
+"22": {"config_id": [22, 0, 0], "budget": 6, "loss": 0.055599987506866455, "time_stamps": "4626.640582561493 (submitted), 4626.640759468079 (started), 5042.810659408569 (finished)\n", "info": {}},
