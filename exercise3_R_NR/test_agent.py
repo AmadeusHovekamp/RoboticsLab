@@ -11,29 +11,32 @@ from utils import *
 
 
 def run_episode(env, agent, rendering=True, max_timesteps=1000):
-    
+
     episode_reward = 0
     step = 0
 
     state = env.reset()
     while True:
-        
+
         # TODO: preprocess the state in the same way than in in your preprocessing in train_agent.py
-        #    state = ...
-        
+        X = np.array([rgb2gray(state)])
+        X = X.astype('float32').reshape(1, 96, 96, 1)
+
         # TODO: get the action from your agent! If you use discretized actions you need to transform them to continuous
         # actions again. a needs to have a shape like np.array([0.0, 0.0, 0.0])
         # a = ...
+        a = agent.sess.run(agent.y_prediction, feed_dict={agent.x_placeholder: X})
+        a = id_to_action(a)
 
-        next_state, r, done, info = env.step(a)   
-        episode_reward += r       
+        next_state, r, done, info = env.step(a)
+        episode_reward += r
         state = next_state
         step += 1
-        
+
         if rendering:
             env.render()
 
-        if done or step > max_timesteps: 
+        if done or step > max_timesteps:
             break
 
     return episode_reward
@@ -42,13 +45,13 @@ def run_episode(env, agent, rendering=True, max_timesteps=1000):
 if __name__ == "__main__":
 
     # important: don't set rendering to False for evaluation (you may get corrupted state images from gym)
-    rendering = True                      
-    
+    rendering = True
+
     n_test_episodes = 15                  # number of episodes to test
 
     # TODO: load agent
-    # agent = Model(...)
-    # agent.load("models/agent.ckpt")
+    agent = Model(0)
+    agent.load("models/agent.ckpt")
 
     env = gym.make('CarRacing-v0').unwrapped
 
@@ -62,10 +65,10 @@ if __name__ == "__main__":
     results["episode_rewards"] = episode_rewards
     results["mean"] = np.array(episode_rewards).mean()
     results["std"] = np.array(episode_rewards).std()
- 
+
     fname = "results/results_bc_agent-%s.json" % datetime.now().strftime("%Y%m%d-%H%M%S")
     fh = open(fname, "w")
     json.dump(results, fh)
-            
+
     env.close()
     print('... finished')

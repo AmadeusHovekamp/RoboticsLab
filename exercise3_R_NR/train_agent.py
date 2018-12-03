@@ -5,6 +5,8 @@ import numpy as np
 import os
 import gzip
 import matplotlib.pyplot as plt
+import random
+
 
 from model import Model
 from utils import *
@@ -37,16 +39,32 @@ def preprocessing(X_train, y_train, X_valid, y_valid, history_length=1):
     # TODO: preprocess your data here.
     # 1. convert the images in X_train/X_valid to gray scale. If you use rgb2gray() from utils.py, the output shape (96, 96, 1)
 
-    print("X_train color: \n", X_train)
+    print("X_train.shape before rgb2gray:\n", X_train.shape)
     X_train = rgb2gray(X_train)
-    print("X_train grayscale: \n", X_train)
-
+    print("X_train.shape after rgb2gray:\n", X_train.shape)
     X_valid = rgb2gray(X_valid)
 
+    X_train = X_train.astype('float32').reshape(X_train.shape[0], 96, 96, 1)
+    X_valid = X_valid.astype('float32').reshape(X_valid.shape[0], 96, 96, 1)
 
     # 2. you can either train your model with continous actions (as you get them from read_data) using regression
     #    or you discretize the action space using action_to_id() from utils.py. If you discretize them, you'll maybe find one_hot()
     #    useful and you may want to return X_train_unhot ... as well.
+
+    y_train_discretized = np.array([])
+    for y in y_train:
+        y_train_discretized = np.append(y_train_discretized, action_to_id(y))
+    y_train = one_hot(y_train_discretized, classes=np.array([0, 1, 2, 3, 4, 5, 6, 7, 8]))
+
+    y_valid_discretized = np.array([])
+    for y in y_valid:
+        y_valid_discretized = np.append(y_valid_discretized, action_to_id(y))
+    y_valid = one_hot(y_valid_discretized, classes=np.array([0, 1, 2, 3, 4, 5, 6, 7, 8]))
+
+    plt.title("Histograms of train and validation set")
+    plt.hist(y_train_discretized, density=True, bins=6)
+    plt.hist(y_valid_discretized, density=True, bins=6)
+    plt.show()
 
     # History:
     # At first you should only use the current image as input to your network to learn the next action. Then the input states
@@ -56,7 +74,7 @@ def preprocessing(X_train, y_train, X_valid, y_valid, history_length=1):
     return X_train, y_train, X_valid, y_valid
 
 
-def train_model(X_train, y_train, X_valid, n_minibatches, batch_size, lr, model_dir="./models", tensorboard_dir="./tensorboard"):
+def train_model(X_train, y_train, X_valid, y_valid, n_minibatches, batch_size, lr, model_dir="./models", tensorboard_dir="./tensorboard"):
 
     # create result and model folders
     if not os.path.exists(model_dir):
@@ -64,9 +82,7 @@ def train_model(X_train, y_train, X_valid, n_minibatches, batch_size, lr, model_
 
     print("... train model")
 
-
-    # TODO: specify your neural network in model.py
-    # agent = Model(...)
+    agent = Model(lr)
 
     tensorboard_eval = Evaluation(tensorboard_dir)
 
@@ -77,14 +93,49 @@ def train_model(X_train, y_train, X_valid, n_minibatches, batch_size, lr, model_
     #    your training in your web browser
     #
     # training loop
-    # for i in range(n_minibatches):
-    #     ...
-    #     for i % 10 == 0:
-    #         tensorboard_eval.write_episode_data(...)
+    train_loss = 0
+
+    for batch_counter in range(n_minibatches):
+        print(batch_counter)
+        X_minibatch, y_minibatch = sample_minibatch(X_train, y_train, batch_size)
+
+        # train
+        _, tmp_loss = agent.sess.run([agent.train_op, agent.loss],
+                                  feed_dict={agent.x_placeholder: X_minibatch,
+                                             agent.y_placeholder: y_minibatch})
+
+        np.append(agent.train_loss, tmp_loss)
+
+        tmp_train_accuracy = agent.accuracy.eval({agent.x_placeholder: X_minibatch, agent.y_placeholder: y_minibatch}, session=agent.sess)
+        np.append(agent.train_accuracy, tmp_train_accuracy)
+
+        tmp_train_error = 1 - tmp_train_accuracy
+        np.append(agent.train_error, tmp_train_error)
+
+        tmp_valid_accuracy = agent.accuracy.eval({agent.x_placeholder: X_valid, agent.y_placeholder: y_valid}, session=agent.sess)
+        np.append(agent.valid_accuracy, tmp_valid_accuracy)
+
+        tmp_valid_error = 1 - tmp_valid_accuracy
+        np.append(agent.valid_error, tmp_valid_error)
+
+        # if batch_counter % 10 == 0:
+        tensorboard_eval.write_episode_data(batch_counter, {"loss": tmp_loss,
+                                                "train_accuracy": tmp_train_accuracy,
+                                                "train_error": tmp_train_error,
+                                                "valid_accuracy": tmp_valid_accuracy,
+                                                "valid_error": tmp_valid_error})
 
     # TODO: save your agent
-    # model_dir = agent.save(os.path.join(model_dir, "agent.ckpt"))
-    # print("Model saved in file: %s" % model_dir)
+    model_file = os.path.join(model_dir, "agent.ckpt")
+    agent.save(model_file)
+    print("Model saved in file: %s" % model_file)
+
+def sample_minibatch(X, y, batch_size):
+    indicies = range(len(X))
+    indicies = random.sample(indicies, batch_size)
+    X_minibatch = X[indicies]
+    y_minibatch = y[indicies]
+    return X_minibatch, y_minibatch
 
 
 if __name__ == "__main__":
@@ -96,4 +147,4 @@ if __name__ == "__main__":
     X_train, y_train, X_valid, y_valid = preprocessing(X_train, y_train, X_valid, y_valid, history_length=1)
 
     # train model (you can change the parameters!)
-    train_model(X_train, y_train, X_valid, n_minibatches=1000, batch_size=64, lr=0.0001)
+    train_model(X_train, y_train, X_valid, y_valid, n_minibatches=200, batch_size=64, lr=0.0001)
