@@ -1,0 +1,8 @@
+\BOOKMARK [1][-]{section.1}{Getting Set Up}{}% 1
+\BOOKMARK [1][-]{section.2}{Behavioral Cloning}{}% 2
+\BOOKMARK [2][-]{subsection.2.1}{Getting familiar and collection expert driving data}{section.2}% 3
+\BOOKMARK [2][-]{subsection.2.2}{Creating and training a behavioral cloning agent}{section.2}% 4
+\BOOKMARK [2][-]{subsection.2.3}{The first network}{section.2}% 5
+\BOOKMARK [2][-]{subsection.2.4}{Balancing the training data}{section.2}% 6
+\BOOKMARK [2][-]{subsection.2.5}{An improved network}{section.2}% 7
+\BOOKMARK [1][-]{section.3}{Influence of hyperparameters}{}% 8

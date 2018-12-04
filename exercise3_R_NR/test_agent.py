@@ -17,6 +17,8 @@ def run_episode(env, agent, rendering=True, max_timesteps=1000):
 
     state = env.reset()
     while True:
+        # import time
+        # time.sleep(0.3)
 
         # TODO: preprocess the state in the same way than in in your preprocessing in train_agent.py
         X = np.array([rgb2gray(state)])
@@ -26,6 +28,8 @@ def run_episode(env, agent, rendering=True, max_timesteps=1000):
         # actions again. a needs to have a shape like np.array([0.0, 0.0, 0.0])
         # a = ...
         a = agent.sess.run(agent.y_prediction, feed_dict={agent.x_placeholder: X})
+        print("prediction of network: \n", a)
+
         a = id_to_action(a)
 
         next_state, r, done, info = env.step(a)

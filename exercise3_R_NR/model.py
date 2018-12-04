@@ -15,10 +15,11 @@ class Model:
         self.y_placeholder = tf.placeholder(tf.float32, shape=[None, self.y_dim])
 
         # Define network
-        self.cnn_graph = self.create_cnn_graph(self.x_placeholder)
+        #self.cnn_graph = self.create_cnn_graph(self.x_placeholder)
+        #self.cnn_graph = self.create_improved_cnn_graph(self.x_placeholder)
+        self.cnn_graph = self.create_improved_cnn_graph2(self.x_placeholder)
 
         # Loss and optimizer
-        # loss = tf.losses.sparse_softmax_cross_entropy(labels=self.y_placeholder, logits=cnn_graph)
         soft_entropy = tf.nn.softmax_cross_entropy_with_logits_v2(labels=self.y_placeholder, logits=self.cnn_graph)
         self.loss = tf.reduce_mean(soft_entropy)
 
@@ -69,6 +70,77 @@ class Model:
         layer_conv_2 = tf.layers.conv2d(inputs=layer_pool_1,
                                         filters=self.num_filters,
                                         kernel_size=self.filter_size,
+                                        strides=1,
+                                        padding='same',
+                                        activation=tf.nn.relu)
+
+        layer_pool_2 = tf.layers.max_pooling2d(inputs=layer_conv_2,
+                                               pool_size=2,
+                                               strides=1)
+
+        layer_pool_2_flat = tf.contrib.layers.flatten(layer_pool_2)
+
+        layer_fully_connected = tf.layers.dense(inputs=layer_pool_2_flat,
+                                                units=128,
+                                                activation=tf.nn.relu)
+
+        layer_output_wo_softmax = tf.layers.dense(inputs=layer_fully_connected,
+                                              units=self.y_dim)
+
+        return layer_output_wo_softmax
+
+
+    def create_improved_cnn_graph(self, layer_inputs):
+        layer_conv_1 = tf.layers.conv2d(inputs=layer_inputs,
+                                        filters=16,
+                                        kernel_size=7,
+                                        strides=1,
+                                        padding='same',
+                                        activation=tf.nn.relu)
+
+        layer_pool_1 = tf.layers.max_pooling2d(inputs=layer_conv_1,
+                                               pool_size=2,
+                                               strides=1)
+
+        layer_conv_2 = tf.layers.conv2d(inputs=layer_pool_1,
+                                        filters=16,
+                                        kernel_size=7,
+                                        strides=1,
+                                        padding='same',
+                                        activation=tf.nn.relu)
+
+        layer_pool_2 = tf.layers.max_pooling2d(inputs=layer_conv_2,
+                                               pool_size=2,
+                                               strides=1)
+
+        layer_pool_2_flat = tf.contrib.layers.flatten(layer_pool_2)
+
+        layer_fully_connected = tf.layers.dense(inputs=layer_pool_2_flat,
+                                                units=128,
+                                                activation=tf.nn.relu)
+
+        layer_output_wo_softmax = tf.layers.dense(inputs=layer_fully_connected,
+                                              units=self.y_dim)
+
+        return layer_output_wo_softmax
+
+
+
+    def create_improved_cnn_graph2(self, layer_inputs):
+        layer_conv_1 = tf.layers.conv2d(inputs=layer_inputs,
+                                        filters=20,
+                                        kernel_size=10,
+                                        strides=1,
+                                        padding='same',
+                                        activation=tf.nn.relu)
+
+        layer_pool_1 = tf.layers.max_pooling2d(inputs=layer_conv_1,
+                                               pool_size=2,
+                                               strides=1)
+
+        layer_conv_2 = tf.layers.conv2d(inputs=layer_pool_1,
+                                        filters=20,
+                                        kernel_size=7,
                                         strides=1,
                                         padding='same',
                                         activation=tf.nn.relu)

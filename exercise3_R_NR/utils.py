@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib
 
 LEFT =1
 RIGHT = 2
@@ -32,18 +34,31 @@ def rgb2gray(rgb):
     return gray.astype('float32')
 
 
+def get_action_name(a):
+    if a == LEFT: return "LEFT"
+    elif a == RIGHT: return "RIGHT"
+    elif a == ACCELERATE: return "ACCELERATE"
+    elif a == BRAKE: return "BRAKE"
+    elif a == ACC_LEFT: return "ACC_LEFT"
+    elif a == ACC_RIGHT: return "ACC_RIGHT"
+    elif a == BRAKE_LEFT: return "BRAKE_LEFT"
+    elif a == BRAKE_RIGHT: return "BRAKE_RIGHT"
+    else:
+        return "STRAIGHT"
+
+
 def action_to_id(a):
     """
     this method discretizes the actions.
     """
-    if all(a == [-1.0, 0.0, 0.0]): return LEFT               # LEFT: 1
-    elif all(a == [1.0, 0.0, 0.0]): return RIGHT             # RIGHT: 2
-    elif all(a == [0.0, 1.0, 0.0]): return ACCELERATE        # ACCELERATE: 3
-    elif all(a == [0.0, 0.0, 0.2]): return BRAKE             # BRAKE: 4
-    elif all(a == [-1.0, 1.0, 0.0]): return ACC_LEFT         # ACC_LEFT: 5
-    elif all(a == [1.0, 1.0, 0.0]): return ACC_RIGHT         # ACC_RIGHT: 6
-    elif all(a == [-1.0, 0.0, 0.2]): return BRAKE_LEFT       # BRAKE_LEFT: 7
-    elif all(a == [1.0, 0.0, 0.2]): return BRAKE_RIGHT       # BRAKE_RIGHT: 8
+    if all(a == np.array([-1.0, 0.0, 0.0]).astype('float32')): return LEFT               # LEFT: 1
+    elif all(a == np.array([1.0, 0.0, 0.0]).astype('float32')): return RIGHT             # RIGHT: 2
+    elif all(a == np.array([0.0, 1.0, 0.0]).astype('float32')): return ACCELERATE        # ACCELERATE: 3
+    elif all(a == np.array([0.0, 0.0, 0.2]).astype('float32')): return BRAKE             # BRAKE: 4
+    elif all(a == np.array([-1.0, 1.0, 0.0]).astype('float32')): return ACC_LEFT         # ACC_LEFT: 5
+    elif all(a == np.array([1.0, 1.0, 0.0]).astype('float32')): return ACC_RIGHT         # ACC_RIGHT: 6
+    elif all(a == np.array([-1.0, 0.0, 0.2]).astype('float32')): return BRAKE_LEFT       # BRAKE_LEFT: 7
+    elif all(a == np.array([1.0, 0.0, 0.2]).astype('float32')): return BRAKE_RIGHT       # BRAKE_RIGHT: 8
     else:
         return STRAIGHT                                      # STRAIGHT = 0
 
@@ -52,13 +67,20 @@ def id_to_action(a):
     """
     this method undoes action_to_id.
     """
-    if LEFT: return [-1.0, 0.0, 0.0]                         # LEFT: 1
-    elif RIGHT: return [1.0, 0.0, 0.0]                       # RIGHT: 2
-    elif ACCELERATE: return [0.0, 1.0, 0.0]                  # ACCELERATE: 3
-    elif BRAKE: return [0.0, 0.0, 0.2]                       # BRAKE: 4
-    elif ACC_LEFT: return [-1.0, 1.0, 0.0]                   # ACC_LEFT: 5
-    elif ACC_RIGHT: return [1.0, 1.0, 0.0]                   # ACC_RIGHT: 6
-    elif BRAKE_LEFT: return [-1.0, 0.0, 0.2]                 # BRAKE_LEFT: 7
-    elif BRAKE_RIGHT: return [1.0, 0.0, 0.2]                 # BRAKE_RIGHT: 8
+    if a == LEFT: return [-1.0, 0.00, 0.0]                         # LEFT: 1
+    elif a == RIGHT: return [1.0, 0.00, 0.0]                       # RIGHT: 2
+    elif a == ACCELERATE: return [0.0, 1.0, 0.0]                  # ACCELERATE: 3
+    elif a == BRAKE: return [0.0, 0.0, 0.2]                       # BRAKE: 4
+    elif a == ACC_LEFT: return [-1.0, 1.0, 0.0]                   # ACC_LEFT: 5
+    elif a == ACC_RIGHT: return [1.0, 1.0, 0.0]                   # ACC_RIGHT: 6
+    elif a == BRAKE_LEFT: return [-1.0, 0.0, 0.2]                 # BRAKE_LEFT: 7
+    elif a == BRAKE_RIGHT: return [1.0, 0.0, 0.2]                 # BRAKE_RIGHT: 8
     else:
-        return [0.0,0.2,0.0]                                 # STRAIGHT = 0
+        return [0.0,0.0,0.0]                                 # STRAIGHT = 0
+
+def display_state(state):
+    # plt.imshow(state, cmap="rbg")
+    # plt.show()
+    # plt.imshow(state, cmap="gray")
+    # plt.show()
+    pass
