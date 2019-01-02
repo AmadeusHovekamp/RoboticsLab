@@ -17,3 +17,5 @@ class EpisodeStats:
         ids = np.array(self.actions_ids)
         return (len(ids[ids == action_id]) / len(ids))
 
+    def __str__(self):
+        return "reward: {:4d}\t0: {:.4f}\t1: {:.4f}".format(int(self.episode_reward), self.get_action_usage(0), self.get_action_usage(1))

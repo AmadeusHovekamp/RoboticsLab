@@ -20,7 +20,6 @@ def run_episode(env, agent, deterministic, do_training=True, rendering=False, ma
     step = 0
     while True:
 
-        # state = state.reshape()
         action_id = agent.act(state=state, deterministic=deterministic)
         next_state, reward, terminal, info = env.step(action_id)
 
@@ -47,24 +46,34 @@ def train_online(env, agent, num_episodes, model_dir="./models_cartpole", tensor
 
     print("... train agent")
 
-    tensorboard = Evaluation(os.path.join(tensorboard_dir, "train"), ["episode_reward", "a_0", "a_1"])
+    tensorboard = Evaluation(os.path.join(tensorboard_dir, "train"), ["episode_reward", "a_0", "a_1", "eval_reward"])
+    mean_reward = 0
 
     # training
     for i in range(num_episodes):
-        print("episode: ",i)
-        stats = run_episode(env, agent, deterministic=False, do_training=False, rendering=True) # TODO: do_training=True SET TO FALSE!! Added rendering=True
-        tensorboard.write_episode_data(i, eval_dict={  "episode_reward" : stats.episode_reward,
-                                                                "a_0" : stats.get_action_usage(0),
-                                                                "a_1" : stats.get_action_usage(1)})
-
-        # TODO: evaluate your agent once in a while for some episodes using run_episode(env, agent, deterministic=True, do_training=False) to
+        # print("episode: {}".format(i))
+        stats = run_episode(env, agent, deterministic=False, do_training=True, rendering=False)
+        # print("stats in eposide {:4d}:\t{}".format(i,stats))
+        # evaluate your agent once in a while for some episodes using run_episode(env, agent, deterministic=True, do_training=False) to
         # check its performance with greedy actions only. You can also use tensorboard to plot the mean episode reward.
         # ...
+        if i % 20 == 0 or i >= (num_episodes - 1):
+            evaluation_stats = []
+            for j in range(5):
+                eval_stats = run_episode(env, agent, deterministic=True, do_training=False, rendering=False)
+                evaluation_stats.append(eval_stats.episode_reward)
+            mean_reward = np.mean(evaluation_stats)
+            # print("evaluation: mean_reward after eposide {}:\t\t{}\n".format(i,mean_reward))
 
         # store model every 100 episodes and in the end.
         if i % 100 == 0 or i >= (num_episodes - 1):
             agent.saver.save(agent.sess, os.path.join(model_dir, "dqn_agent.ckpt"))
 
+        tensorboard.write_episode_data(i, eval_dict={ "episode_reward" : stats.episode_reward,
+                                                      "a_0" : stats.get_action_usage(0),
+                                                      "a_1" : stats.get_action_usage(1),
+                                                      "eval_reward" : mean_reward
+                                                     })
     tensorboard.close_session()
 
 
@@ -76,17 +85,19 @@ if __name__ == "__main__":
 
     env = gym.make("CartPole-v0").unwrapped
 
-    # TODO:
     # 1. init Q network and target network (see dqn/networks.py)
     num_states = 4
     num_actions = env.action_space.n
+    num_episodes = 1000 # > 100 !
 
-    q_net = NeuralNetwork(num_states, num_actions)
-    target_net = TargetNetwork(num_states, num_actions)
+    q_net = NeuralNetwork(num_states, num_actions, lr = 0.001)
+    target_net = TargetNetwork(num_states, num_actions, lr = 0.001)
 
     # 2. init DQNAgent (see dqn/dqn_agent.py)
     dqn_agent = DQNAgent(q_net, target_net, num_actions)
 
     # 3. train DQN agent with train_online(...)
-    num_episodes = 500 # > 100 !
     train_online(env, dqn_agent, num_episodes)
+
+
+    # MountainCar-v0
