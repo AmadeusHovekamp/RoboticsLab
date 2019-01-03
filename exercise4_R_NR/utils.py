@@ -18,4 +18,8 @@ class EpisodeStats:
         return (len(ids[ids == action_id]) / len(ids))
 
     def __str__(self):
-        return "reward: {:4d}\t0: {:.4f}\t1: {:.4f}".format(int(self.episode_reward), self.get_action_usage(0), self.get_action_usage(1))
+        result = "reward: {:4d}".format(int(self.episode_reward))
+
+        for action in sorted(set(self.actions_ids)):
+            result += "\taction {}: {:.4f}".format(action, self.get_action_usage(action))
+        return result

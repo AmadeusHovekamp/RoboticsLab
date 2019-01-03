@@ -40,19 +40,19 @@ def run_episode(env, agent, deterministic, do_training=True, rendering=False, ma
 
     return stats
 
-def train_online(env, agent, num_episodes, model_dir="./models_cartpole", tensorboard_dir="./tensorboard"):
+def train_online(env, agent, num_episodes, model_dir="./models_mountaincar", tensorboard_dir="./tensorboard"):
     if not os.path.exists(model_dir):
         os.mkdir(model_dir)
 
     print("... train agent")
 
-    tensorboard = Evaluation(os.path.join(tensorboard_dir, "train"), ["episode_reward", "a_0", "a_1", "eval_reward"])
+    tensorboard = Evaluation(os.path.join(tensorboard_dir, "train"), ["episode_reward", "a_0", "a_1", "a_2", "eval_reward"])
     mean_reward = 0
 
     # training
     for i in range(num_episodes):
         # print("episode: {}".format(i))
-        stats = run_episode(env, agent, deterministic=False, do_training=True, rendering=False)
+        stats = run_episode(env, agent, deterministic=False, do_training=True, rendering=True)
         print("stats in eposide {:4d}:\t{}".format(i,stats))
         # evaluate your agent once in a while for some episodes using run_episode(env, agent, deterministic=True, do_training=False) to
         # check its performance with greedy actions only. You can also use tensorboard to plot the mean episode reward.
@@ -60,7 +60,7 @@ def train_online(env, agent, num_episodes, model_dir="./models_cartpole", tensor
         if i % 20 == 0 or i >= (num_episodes - 1):
             evaluation_stats = []
             for j in range(5):
-                eval_stats = run_episode(env, agent, deterministic=True, do_training=False, rendering=False)
+                eval_stats = run_episode(env, agent, deterministic=True, do_training=False, rendering=True)
                 evaluation_stats.append(eval_stats.episode_reward)
             mean_reward = np.mean(evaluation_stats)
             print("evaluation: mean_reward after eposide {}:\t\t{}\n".format(i,mean_reward))
@@ -72,6 +72,7 @@ def train_online(env, agent, num_episodes, model_dir="./models_cartpole", tensor
         tensorboard.write_episode_data(i, eval_dict={ "episode_reward" : stats.episode_reward,
                                                       "a_0" : stats.get_action_usage(0),
                                                       "a_1" : stats.get_action_usage(1),
+                                                      "a_2" : stats.get_action_usage(2),
                                                       "eval_reward" : mean_reward
                                                      })
     tensorboard.close_session()
@@ -79,17 +80,16 @@ def train_online(env, agent, num_episodes, model_dir="./models_cartpole", tensor
 
 if __name__ == "__main__":
 
-    # You find information about cartpole in
-    # https://github.com/openai/gym/wiki/CartPole-v0
-    # Hint: CartPole is considered solved when the average reward is greater than or equal to 195.0 over 100 consecutive trials.
+    # You find information about MountainCar in
+    # https://github.com/openai/gym/wiki/MountainCar-v0
 
-    game_name = "CartPole-v0"
+    game_name = "MountainCar-v0"
     print("Starting {} ...  ".format(game_name))
 
     env = gym.make(game_name).unwrapped
 
     # 1. init Q network and target network (see dqn/networks.py)
-    num_states = 4
+    num_states = 2
     num_actions = env.action_space.n
     num_episodes = 1000 # > 100 !
 

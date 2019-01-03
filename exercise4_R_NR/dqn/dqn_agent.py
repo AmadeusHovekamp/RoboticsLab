@@ -28,7 +28,7 @@ class DQNAgent:
         self.discount_factor = discount_factor
 
         # define replay buffer
-        self.replay_buffer = ReplayBuffer()
+        self.replay_buffer = ReplayBuffer(capacity=1e6)
 
         # Start tensorflow session
         self.sess = tf.Session()
@@ -86,7 +86,7 @@ class DQNAgent:
             # To see how the agent explores, turn the rendering in the training on and look what the agent is doing.
 
             action_id = np.random.randint(0, self.num_actions)
-            
+
         return action_id
 
 
