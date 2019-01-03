@@ -67,12 +67,15 @@ def train_online(env, agent, num_episodes, model_dir=os.path.join(".", "models",
             for j in range(100):
                 eval_stats = run_episode(env, agent, deterministic=True, do_training=False, rendering=False)
                 evaluation_stats.append(eval_stats.episode_reward)
-            mean_reward = np.mean(evaluation_stats)
+            mean_reward = np.mean(evaluation_stats[:5])
+
+            solved_reward = np.mean(evaluation_stats)
 
             if args.verbose:
-                print("evaluation: mean_reward after eposide {}:\t\t{}\n".format(i,mean_reward))
+                print("evaluation: mean_reward after eposide {}:  \t{}".format(i,mean_reward))
+                print("            solved_reward after eposide {}:\t{}\n".format(i,solved_reward))
 
-            solved = mean_reward >= 195
+            solved = solved_reward >= 195
 
         # store model every 100 episodes and in the end.
         if i >= (num_episodes - 1):
