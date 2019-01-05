@@ -1,0 +1,14 @@
+Erstes scheint zwischen 30 und 50 Episoden gelernt zu werden
+
+- history: 2
+
+Lernplan:
+1. 1-50 Episoden:
+- Zufall: 0.2
+- Steps: 150
+- skipframe: 5
+
+2. 51-130:
+- Zufall: 0.15
+- Steps: 300
+- skipframe: 3

@@ -18,7 +18,8 @@ from carracing_utils import (rgb2gray,
                              BRAKE,
                              one_hot,
                              action_to_id,
-                             id_to_action)
+                             id_to_action,
+                             display_state)
 
 
 import argparse
@@ -74,6 +75,10 @@ def run_episode(env, agent, current_episode, deterministic, skip_frames=0,
                  break
 
         next_state = state_preprocessing(next_state)
+
+        if current_frame % 10 == 0:
+            display_state(next_state)
+
         image_hist.append(next_state)
         image_hist.pop(0)
         next_state = np.array(image_hist).reshape(96, 96, history_length + 1)
@@ -105,43 +110,52 @@ def train_online(env, agent, num_episodes, history_length=0,
         os.mkdir(model_dir)
 
     print("... train agent")
-    tensorboard = Evaluation(os.path.join(tensorboard_dir, "train"), ["episode_reward", "straight", "left", "right", "accel", "brake"])
+    tensorboard = Evaluation(os.path.join(tensorboard_dir, "train"),
+                             ["episode_reward", "straight", "left", "right", "accel", "brake", "eval_reward"])
 
     for i in range(num_episodes):
 
         # Hint: you can keep the episodes short in the beginning by changing max_timesteps (otherwise the car will spend most of the time out of the track)
 
         # stats = run_episode(env, agent, i, skip_frames=5, deterministic=False, do_training=True, rendering=False)
-        stats = run_episode(env, agent, i, skip_frames=5, deterministic=False, do_training=True, rendering=False, max_timesteps=100)
+        if args.verbose:
+            print("\n\nEpisode {}".format(i))
+        stats = run_episode(env, agent, i, skip_frames=3, deterministic=False,
+                            do_training=True, rendering=False, max_timesteps=300,
+                            history_length=history_length)
 
         if args.verbose:
-            print("stats in eposide {:4d}:\t{}".format(i, stats))
+            print("stats in eposide {:4d}:\t{}\t\tReplayBuffer{}".format(i, stats, len(agent.replay_buffer._data.states)))
 
-        tensorboard.write_episode_data(i, eval_dict={ "episode_reward" : stats.episode_reward,
-                                                      "straight" : stats.get_action_usage(STRAIGHT),
-                                                      "left" : stats.get_action_usage(LEFT),
-                                                      "right" : stats.get_action_usage(RIGHT),
-                                                      "accel" : stats.get_action_usage(ACCELERATE),
-                                                      "brake" : stats.get_action_usage(BRAKE)
-                                                      })
 
         # evaluate agent with deterministic actions from time to time
         if i % 10 == 0 or i >= (num_episodes - 1):
+            if args.verbose:
+                print("\nStarting evaluation...")
+
             evaluation_stats = []
-            for j in range(5):
-                eval_stats = run_episode(env, agent, i, deterministic=False, do_training=False, rendering=True)
+            for j in range(1):
+                eval_stats = run_episode(env, agent, i, deterministic=False, do_training=False, rendering=True,
+                                         history_length=history_length)
                 evaluation_stats.append(eval_stats.episode_reward)
             mean_reward = np.mean(evaluation_stats)
 
-            solved_reward = np.mean(evaluation_stats)
-
             if args.verbose:
                 print("evaluation: mean_reward after eposide {}:  \t{}".format(i, mean_reward))
-                print("            solved_reward after eposide {}:\t{}\n".format(i, solved_reward))
+                print("            ", eval_stats)
 
-
-        if ((args.checkpoint_frequency != 0) and (i % args.checkpoint_frequency == 0)) or (i >= num_episodes - 1):
+        if ((not i == 0) and (args.checkpoint_frequency != 0) and (i % args.checkpoint_frequency == 0)) or (i >= num_episodes - 1):
             save_agent(agent, model_dir)
+
+        tensorboard.write_episode_data(i, eval_dict={ "episode_reward" : stats.episode_reward,
+                "straight" : stats.get_action_usage(STRAIGHT),
+                "left" : stats.get_action_usage(LEFT),
+                "right" : stats.get_action_usage(RIGHT),
+                "accel" : stats.get_action_usage(ACCELERATE),
+                "brake" : stats.get_action_usage(BRAKE),
+                "eval_reward" : mean_reward
+            })
+
 
     tensorboard.close_session()
 
@@ -157,7 +171,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--verbose", action="store_true", default=False, help="Print episode statistics.")
-    parser.add_argument("--show_frame_reward", default=50, type=int, nargs=1, help="Displays current reward every n frames (default = 10).")
+    parser.add_argument("--show_frame_reward", default=0, type=int, nargs=1, help="Displays current reward every n frames (default = 10).")
     parser.add_argument("--render_frequency", default=5, type=int, nargs=1, help="The frequency of rendering the graphical output (default = 5).")
     parser.add_argument("--checkpoint_frequency", default=20, type=int, nargs=1, help="The frequency of creating and saving model checkpoints (default = 20).")
     parser.add_argument("--path_for_reloading", default=os.path.join(".", "models", "CarRacing-v0", "dqn_agent.ckpt"), type=str, nargs="?",
@@ -174,16 +188,17 @@ if __name__ == "__main__":
     num_states = 96
     num_actions = 5
     num_episodes = 500
+    history_length = 2
 
-    q_net = CNN(num_states, num_actions, lr = 0.001)
-    target_net = CNNTargetNetwork(num_states, num_actions, lr = 0.001)
+    q_net = CNN(num_states, num_actions, lr = 0.001, history_length=history_length)
+    target_net = CNNTargetNetwork(num_states, num_actions, lr = 0.001, history_length=history_length)
 
     # init DQNAgent (see dqn/dqn_agent.py)
-    agent = DQNAgent(game_name, q_net, target_net, num_actions, batch_size=64, epsilon=0.05)
+    agent = DQNAgent(game_name, q_net, target_net, num_actions, batch_size=64, epsilon=0.15)
 
     # Load stored model
     if args.path_for_reloading != "":
         agent.load(args.path_for_reloading)
 
     # train DQN agent with train_online(...)
-    train_online(env, agent, num_episodes=100, history_length=0)
+    train_online(env, agent, num_episodes=100, history_length=history_length)

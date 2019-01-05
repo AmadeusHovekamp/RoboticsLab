@@ -8,10 +8,13 @@ class CNN():
     """
     Convolutional Neural Network class based on NeuralNetwork.
     """
-    def __init__(self, state_dim, num_actions, filters=20, neurons=128, lr=1e-4):
-        self._build_model(state_dim, num_actions, filters, neurons, lr)
+    def __init__(self, state_dim, num_actions, filters=15, neurons=128, lr=1e-4,
+                 history_length=0):
+        self._build_model(state_dim, num_actions, filters, neurons, lr,
+                          history_length)
 
-    def _build_model(self, state_dim, num_actions, filters, neurons, lr):
+    def _build_model(self, state_dim, num_actions, filters, neurons, lr,
+                     history_length):
         """
         This method creates a convolutional neural network with two hidden
         convolution layers with 20 filters each and one fully connected layer
@@ -22,7 +25,7 @@ class CNN():
         with a learning rate of 1e-4).
         """
 
-        self.states_ = tf.placeholder(tf.float32, shape=[None, state_dim, state_dim, 1])
+        self.states_ = tf.placeholder(tf.float32, shape=[None, state_dim, state_dim, history_length+1])
         self.actions_ = tf.placeholder(tf.int32, shape=[None])                  # Integer id of which action was selected
         self.targets_ = tf.placeholder(tf.float32,  shape=[None])               # The TD target value
 
@@ -97,8 +100,9 @@ class CNNTargetNetwork(CNN):
     Slowly updated target network. Tau indicates the speed of adjustment. If 1,
     it is always set to the values of its associate.
     """
-    def __init__(self, state_dim, num_actions, filters=20, neurons=128, lr=1e-4, tau=0.01):
-        super().__init__(state_dim, num_actions, filters, neurons, lr)
+    def __init__(self, state_dim, num_actions, filters=15, neurons=128, lr=1e-4, tau=0.01,
+                 history_length=0):
+        super().__init__(state_dim, num_actions, filters, neurons, lr, history_length)
         self.tau = tau
         self._associate = self._register_associate()
 

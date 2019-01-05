@@ -62,6 +62,6 @@ def id_to_action(a):
 def display_state(state):
     # plt.imshow(state, cmap="rbg")
     # plt.show()
-    # plt.imshow(state, cmap="gray")
-    # plt.show()
+    plt.imshow(state, cmap="gray")
+    plt.show()
     pass
