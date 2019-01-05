@@ -8,21 +8,21 @@ class CNN():
     """
     Convolutional Neural Network class based on NeuralNetwork.
     """
-    def __init__(self, state_dim, num_actions, filters=20, lr=1e-4):
-        self._build_model(state_dim, num_actions, filters, lr)
+    def __init__(self, state_dim, num_actions, filters=20, neurons=128, lr=1e-4):
+        self._build_model(state_dim, num_actions, filters, neurons, lr)
 
-    def _build_model(self, state_dim, num_actions, filters, lr):
+    def _build_model(self, state_dim, num_actions, filters, neurons, lr):
         """
         This method creates a convolutional neural network with two hidden
         convolution layers with 20 filters each and one fully connected layer
-        with 20 neurons.
+        with 128 neurons.
         The output layer has #a neurons, where #a is the number of actions and
         has linear activation.
         Also creates its loss (mean squared loss) and its optimizer (e.g. Adam
         with a learning rate of 1e-4).
         """
 
-        self.states_ = tf.placeholder(tf.float32, shape=[None, state_dim])
+        self.states_ = tf.placeholder(tf.float32, shape=[None, state_dim, state_dim, 1])
         self.actions_ = tf.placeholder(tf.int32, shape=[None])                  # Integer id of which action was selected
         self.targets_ = tf.placeholder(tf.float32,  shape=[None])               # The TD target value
 
@@ -30,18 +30,27 @@ class CNN():
 
         conv1 = tf.layers.conv2d(inputs=self.states_,
                                  filters=filters,
-                                 kernel_size=10,
+                                 kernel_size=6,
                                  strides=1,
                                  padding='same',
                                  activation=tf.nn.relu)
-        conv2 = tf.layers.conv2d(inputs=conv1,
+        pool1 = tf.layers.max_pooling2d(inputs=conv1,
+                                        pool_size=2,
+                                        strides=1)
+        conv2 = tf.layers.conv2d(inputs=pool1,
                                  filters=filters,
-                                 kernel_size=10,
+                                 kernel_size=6,
                                  strides=1,
                                  padding='same',
                                  activation=tf.nn.relu)
-        fc1 = tf.layers.dense(conv2, filters, tf.nn.relu)
+        pool2 = tf.layers.max_pooling2d(inputs=conv2,
+                                        pool_size=2,
+                                        strides=1)
+        pool2_flat = tf.contrib.layers.flatten(pool2)
+        fc1 = tf.layers.dense(pool2_flat, units=neurons, activation=tf.nn.relu)
+        # fc1 = tf.layers.dense(self.states_, neurons, tf.nn.relu)
         self.predictions = tf.layers.dense(fc1, num_actions)
+        print(self.predictions)
 
         # Get the predictions for the chosen actions only
         batch_size = tf.shape(self.states_)[0]
@@ -88,8 +97,8 @@ class CNNTargetNetwork(CNN):
     Slowly updated target network. Tau indicates the speed of adjustment. If 1,
     it is always set to the values of its associate.
     """
-    def __init__(self, state_dim, num_actions, filters=20, lr=1e-4, tau=0.01):
-        super().__init__(state_dim, num_actions, filters, lr)
+    def __init__(self, state_dim, num_actions, filters=20, neurons=128, lr=1e-4, tau=0.01):
+        super().__init__(state_dim, num_actions, filters, neurons, lr)
         self.tau = tau
         self._associate = self._register_associate()
 

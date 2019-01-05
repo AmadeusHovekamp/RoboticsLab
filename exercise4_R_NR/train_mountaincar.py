@@ -74,7 +74,7 @@ def train_online(env, agent, num_episodes, model_dir=os.path.join(".", "models",
 
             solved = mean_reward >= -200
 
-        # store model every 100 episodes and in the end.
+        # store model in the end.
         if i >= (num_episodes - 1):
             save_agent(agent, model_dir, "full_run")
 
@@ -126,7 +126,7 @@ if __name__ == "__main__":
     target_net = TargetNetwork(num_states, num_actions, lr = 0.001)
 
     # 2. init DQNAgent (see dqn/dqn_agent.py)
-    dqn_agent = DQNAgent(q_net, target_net, num_actions)
+    dqn_agent = DQNAgent(game_name, q_net, target_net, num_actions)
 
     # 3. train DQN agent with train_online(...)
     train_online(env, dqn_agent, num_episodes)

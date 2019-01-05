@@ -4,7 +4,7 @@ from dqn.replay_buffer import ReplayBuffer
 
 class DQNAgent:
 
-    def __init__(self, Q, Q_target, num_actions, discount_factor=0.99,
+    def __init__(self, game_name, Q, Q_target, num_actions, discount_factor=0.99,
                  batch_size=64, epsilon=0.05):
         """
          Q-Learning agent for off-policy TD control using Function Approximation.
@@ -18,6 +18,8 @@ class DQNAgent:
             batch_size: Number of samples per batch.
             epsilon: Chance to sample a random action. Float betwen 0 and 1.
         """
+        self.game_name = game_name
+
         self.Q = Q
         self.Q_target = Q_target
 
@@ -28,7 +30,7 @@ class DQNAgent:
         self.discount_factor = discount_factor
 
         # define replay buffer
-        self.replay_buffer = ReplayBuffer(capacity=1e6)
+        self.replay_buffer = ReplayBuffer(capacity=1e5)
 
         # Start tensorflow session
         self.sess = tf.Session()
@@ -46,11 +48,18 @@ class DQNAgent:
         self.replay_buffer.add_transition(state, action, next_state, reward, terminal)
         # 2. sample next batch and perform batch update:
         n_b_states, n_b_actions, n_b_next_states, n_b_rewards, n_b_dones = self.replay_buffer.next_batch(self.batch_size)
+        # print("n_b_dones.shape:\n\t{}".format(n_b_dones.shape))
         #       2.1 compute td targets:
         #           td_target =  reward + discount * max_a Q_target(next_state_batch, a)
         prediction = self.Q_target.predict(self.sess, n_b_next_states)
+        # print("prediction.shape:\n\t{}".format(prediction.shape))
         target = np.max(prediction, axis=1)
+        # print("target.shape:\n\t{}".format(target.shape))
         td_target = n_b_rewards
+        # print("td_target.shape:\n\t{}".format(td_target.shape))
+
+
+        # print("target[n_b_dones==0].shape:\n\t{}".format(target[n_b_dones==0].shape))
         td_target[n_b_dones==0] += np.dot(self.discount_factor, target[n_b_dones==0])
         # print("n_b_rewards:\t{}".format(n_b_rewards))
         # print("td_target:\t{}".format(td_target))
@@ -85,7 +94,12 @@ class DQNAgent:
             # You can sample the agents actions with different probabilities (need to sum up to 1) so that the agent will prefer to accelerate or going straight.
             # To see how the agent explores, turn the rendering in the training on and look what the agent is doing.
 
-            action_id = np.random.randint(0, self.num_actions)
+            if self.game_name == "CartPole-v0":
+                action_id = np.random.randint(0, self.num_actions)
+            elif self.game_name == "MountainCar-v0":
+                action_id = np.random.randint(0, self.num_actions)
+            elif self.game_name == "CarRacing-v0":
+                action_id = np.random.randint(0, self.num_actions)
 
         return action_id
 
