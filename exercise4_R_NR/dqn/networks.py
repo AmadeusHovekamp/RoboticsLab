@@ -1,24 +1,21 @@
 import tensorflow as tf
 import numpy as np
 
-# TODO: add your Convolutional Neural Network for the CarRacing environment.
-
 
 class CNN():
     """
     Convolutional Neural Network class based on NeuralNetwork.
     """
-    def __init__(self, state_dim, num_actions, filters=15, neurons=128, lr=1e-4,
+    def __init__(self, state_dim, num_actions, num_filters=20, kernel_size=10, lr=1e-4,
                  history_length=0):
-        self._build_model(state_dim, num_actions, filters, neurons, lr,
+        self._build_model(state_dim, num_actions, num_filters, kernel_size, lr,
                           history_length)
 
-    def _build_model(self, state_dim, num_actions, filters, neurons, lr,
+    def _build_model(self, state_dim, num_actions, num_filters, kernel_size, lr,
                      history_length):
         """
         This method creates a convolutional neural network with two hidden
-        convolution layers with 20 filters each and one fully connected layer
-        with 128 neurons.
+        convolution layers with 20 filters each and two fully connected layers.
         The output layer has #a neurons, where #a is the number of actions and
         has linear activation.
         Also creates its loss (mean squared loss) and its optimizer (e.g. Adam
@@ -32,17 +29,17 @@ class CNN():
         # network
 
         conv1 = tf.layers.conv2d(inputs=self.states_,
-                                 filters=filters,
-                                 kernel_size=6,
-                                 strides=1,
+                                 filters=num_filters,
+                                 kernel_size=kernel_size,
+                                 strides=2,
                                  padding='same',
                                  activation=tf.nn.relu)
         pool1 = tf.layers.max_pooling2d(inputs=conv1,
                                         pool_size=2,
-                                        strides=1)
+                                        strides=2)
         conv2 = tf.layers.conv2d(inputs=pool1,
-                                 filters=filters,
-                                 kernel_size=6,
+                                 filters=num_filters,
+                                 kernel_size=kernel_size,
                                  strides=1,
                                  padding='same',
                                  activation=tf.nn.relu)
@@ -50,10 +47,8 @@ class CNN():
                                         pool_size=2,
                                         strides=1)
         pool2_flat = tf.contrib.layers.flatten(pool2)
-        fc1 = tf.layers.dense(pool2_flat, units=neurons, activation=tf.nn.relu)
-        # fc1 = tf.layers.dense(self.states_, neurons, tf.nn.relu)
+        fc1 = tf.layers.dense(pool2_flat, units=128, activation=tf.nn.relu)
         self.predictions = tf.layers.dense(fc1, num_actions)
-        print(self.predictions)
 
         # Get the predictions for the chosen actions only
         batch_size = tf.shape(self.states_)[0]
@@ -100,9 +95,9 @@ class CNNTargetNetwork(CNN):
     Slowly updated target network. Tau indicates the speed of adjustment. If 1,
     it is always set to the values of its associate.
     """
-    def __init__(self, state_dim, num_actions, filters=15, neurons=128, lr=1e-4, tau=0.01,
+    def __init__(self, state_dim, num_actions, num_filters=20, kernel_size=10, lr=1e-4, tau=0.01,
                  history_length=0):
-        super().__init__(state_dim, num_actions, filters, neurons, lr, history_length)
+        super().__init__(state_dim, num_actions, num_filters, kernel_size, lr, history_length)
         self.tau = tau
         self._associate = self._register_associate()
 

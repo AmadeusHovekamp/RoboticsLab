@@ -1,4 +1,5 @@
 import numpy as np
+from carracing_utils import get_action_name
 
 
 class EpisodeStats:
@@ -18,8 +19,9 @@ class EpisodeStats:
         return (len(ids[ids == action_id]) / len(ids))
 
     def __str__(self):
-        result = "reward: {:4d}".format(int(self.episode_reward))
+        result = "reward: {:4d}\t".format(int(self.episode_reward))
 
         for action in sorted(set(self.actions_ids)):
-            result += "\taction {}: {:.4f}".format(action, self.get_action_usage(action))
+            # result += "\taction {}: {:.4f}".format(action, self.get_action_usage(action))
+            result += "{}: {:.4f}".format(get_action_name(action), self.get_action_usage(action))
         return result

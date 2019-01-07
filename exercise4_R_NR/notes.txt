@@ -1,14 +1,133 @@
 Erstes scheint zwischen 30 und 50 Episoden gelernt zu werden
 
 - history: 2
+- skipframe: 3
+
+Netz:
 
 Lernplan:
 1. 1-50 Episoden:
 - Zufall: 0.2
 - Steps: 150
-- skipframe: 5
+- # LEFT, RIGHT, ACCELERATE, BRAKE, (STRAIGHT)
+    np.array([0.2, 0.2, 0.3, 0.2])
 
 2. 51-130:
 - Zufall: 0.15
 - Steps: 300
-- skipframe: 3
+
+
+
+
+
+
+Neues Netz mit Hist of 5
+
+def __init__(self, state_dim, num_actions, num_filters=20, kernel_size=10, lr=1e-4,
+             history_length=0):
+    self._build_model(state_dim, num_actions, num_filters, kernel_size, lr,
+                      history_length)
+
+def _build_model(self, state_dim, num_actions, num_filters, kernel_size, lr,
+                 history_length):
+    """
+    This method creates a convolutional neural network with two hidden
+    convolution layers with 20 filters each and two fully connected layers.
+    The output layer has #a neurons, where #a is the number of actions and
+    has linear activation.
+    Also creates its loss (mean squared loss) and its optimizer (e.g. Adam
+    with a learning rate of 1e-4).
+    """
+
+    self.states_ = tf.placeholder(tf.float32, shape=[None, state_dim, state_dim, history_length+1])
+    self.actions_ = tf.placeholder(tf.int32, shape=[None])                  # Integer id of which action was selected
+    self.targets_ = tf.placeholder(tf.float32,  shape=[None])               # The TD target value
+
+    # network
+
+    conv1 = tf.layers.conv2d(inputs=self.states_,
+                             filters=num_filters,
+                             kernel_size=kernel_size,
+                             strides=2,
+                             padding='same',
+                             activation=tf.nn.relu)
+    pool1 = tf.layers.max_pooling2d(inputs=conv1,
+                                    pool_size=2,
+                                    strides=2)
+    conv2 = tf.layers.conv2d(inputs=pool1,
+                             filters=num_filters,
+                             kernel_size=kernel_size,
+                             strides=1,
+                             padding='same',
+                             activation=tf.nn.relu)
+    pool2 = tf.layers.max_pooling2d(inputs=conv2,
+                                    pool_size=2,
+                                    strides=1)
+    pool2_flat = tf.contrib.layers.flatten(pool2)
+    fc1 = tf.layers.dense(pool2_flat, units=128, activation=tf.nn.relu)
+    self.predictions = tf.layers.dense(fc1, num_actions)
+
+    # Get the predictions for the chosen actions only
+    batch_size = tf.shape(self.states_)[0]
+    gather_indices = tf.range(batch_size) * tf.shape(self.predictions)[1] + self.actions_
+    self.action_predictions = tf.gather(tf.reshape(self.predictions, [-1]), gather_indices)
+
+    # Calculate the loss
+    self.losses = tf.squared_difference(self.targets_, self.action_predictions)
+    self.loss = tf.reduce_mean(self.losses)
+
+    # Optimizer Parameters from original paper
+    self.optimizer = tf.train.AdamOptimizer(lr)
+    self.train_op = self.optimizer.minimize(self.loss)
+
+
+  21:33, Sonntag,  ersten 30 episoden:
+
+  history_length = 5
+
+  lr = 0.001
+  skip_frames = 1
+  batch_size = 64
+  num_episodes = 30
+  epsilon = 0.2    # Ratio of random actions.
+  max_timesteps = 150
+  rendering=False
+
+  # LEFT, RIGHT, ACCELERATE, BRAKE, (STRAIGHT)
+  distribution = np.array([0.25, 0.25, 0.25, 0.25])
+
+  2. Durchlauf:
+  num_episodes = 30
+  epsilon = 0.2    # Ratio of random actions.
+  max_timesteps = 150
+
+  3. Durchlauf
+  num_episodes = 50
+  epsilon = 0.1    # Ratio of random actions.
+  max_timesteps = 300
+
+  4. Durchlauf
+  num_episodes = 50
+  epsilon = 0.08    # Ratio of random actions.
+  max_timesteps = 450
+
+  5. Durchlauf
+  num_episodes = 50
+  epsilon = 0.08    # Ratio of random actions.
+  max_timesteps = 450
+
+  6. Durchlauf
+  num_episodes = 500
+  epsilon = 0.03    # Ratio of random actions.
+  max_timesteps = 700
+
+  7. Durchlauf
+  num_episodes = 100
+  epsilon = 0.01    # Ratio of random actions.
+  max_timesteps = 1000
+
+
+
+
+
+t

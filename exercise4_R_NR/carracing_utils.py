@@ -64,4 +64,5 @@ def display_state(state):
     # plt.show()
     plt.imshow(state, cmap="gray")
     plt.show()
+    # plt.save("")
     pass
