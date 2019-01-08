@@ -6,7 +6,7 @@ class CNN():
     """
     Convolutional Neural Network class based on NeuralNetwork.
     """
-    def __init__(self, state_dim, num_actions, num_filters=20, kernel_size=10, lr=1e-4,
+    def __init__(self, state_dim, num_actions, num_filters=20, kernel_size=11, lr=1e-4,
                  history_length=0):
         self._build_model(state_dim, num_actions, num_filters, kernel_size, lr,
                           history_length)
@@ -31,7 +31,7 @@ class CNN():
         conv1 = tf.layers.conv2d(inputs=self.states_,
                                  filters=num_filters,
                                  kernel_size=kernel_size,
-                                 strides=2,
+                                 strides=1,
                                  padding='same',
                                  activation=tf.nn.relu)
         pool1 = tf.layers.max_pooling2d(inputs=conv1,
@@ -74,7 +74,6 @@ class CNN():
         prediction = sess.run(self.predictions, { self.states_: states })
         return prediction
 
-
     def update(self, sess, states, actions, targets):
         """
         Updates the weights of the neural network, based on its targets, its
@@ -95,7 +94,7 @@ class CNNTargetNetwork(CNN):
     Slowly updated target network. Tau indicates the speed of adjustment. If 1,
     it is always set to the values of its associate.
     """
-    def __init__(self, state_dim, num_actions, num_filters=20, kernel_size=10, lr=1e-4, tau=0.01,
+    def __init__(self, state_dim, num_actions, num_filters=20, kernel_size=11, lr=1e-4, tau=0.01,
                  history_length=0):
         super().__init__(state_dim, num_actions, num_filters, kernel_size, lr, history_length)
         self.tau = tau

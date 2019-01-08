@@ -135,15 +135,14 @@ def train_online(env, agent, num_episodes, history_length=0, max_timesteps=1000,
                 print("\nStarting evaluation...")
 
             evaluation_stats = []
-            for j in range(1):
-                eval_stats = run_episode(env, agent, i, deterministic=True, do_training=False, rendering=False,
+            for j in range(3):
+                eval_stats = run_episode(env, agent, i, deterministic=True, do_training=False, rendering=True,
                                          history_length=history_length, max_timesteps=max_timesteps)
                 evaluation_stats.append(eval_stats.episode_reward)
             mean_reward = np.mean(evaluation_stats)
 
             if args.verbose:
                 print("evaluation: mean_reward after eposide {}:  \t{}".format(i, mean_reward))
-                print("            ", eval_stats)
 
         if ((not i == 0) and (args.checkpoint_frequency != 0)
             and (i % args.checkpoint_frequency == 0)) or (i >= num_episodes - 1):
@@ -174,7 +173,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--verbose", action="store_true", default=False, help="Print episode statistics.")
     parser.add_argument("--show_frame_reward", default=0, type=int, nargs=1, help="Displays current reward every n frames (default = 0).")
-    parser.add_argument("--render_frequency", default=1, type=int, nargs=1, help="The frequency of rendering the graphical output (default = 0).")
+    parser.add_argument("--render_frequency", default=0, type=int, nargs=1, help="The frequency of rendering the graphical output (default = 0).")
     parser.add_argument("--checkpoint_frequency", default=10, type=int, nargs=1, help="The frequency of creating and saving model checkpoints (default = 20).")
     parser.add_argument("--path_for_reloading", default=os.path.join(".", "models", "CarRacing-v0", "dqn_agent.ckpt"), type=str, nargs="?",
                         help="Path where the agent is located.")
@@ -190,18 +189,21 @@ if __name__ == "__main__":
     num_states = 96
     num_actions = 5
 
-    history_length = 5
+    # Has to stay the same over all training episodes!
+    history_length = 1
 
+    # Changable during training!
     lr = 0.001
     skip_frames = 1
     batch_size = 64
-    num_episodes = 500
-    epsilon = 0.01    # Ratio of random actions.
-    max_timesteps = 1000
-    rendering=False
 
-    # LEFT, RIGHT, ACCELERATE, BRAKE, (STRAIGHT)
-    distribution = np.array([0.25, 0.25, 0.25, 0.25])
+    # Change for different training runs!
+    num_episodes = 100
+    epsilon = 0.05    # Ratio of random actions.
+    max_timesteps = 1000
+    distribution = np.array([0.25, 0.25, 0.25, 0.25])     # LEFT, RIGHT, ACCELERATE, BRAKE, (STRAIGHT)
+
+    rendering=True
 
     q_net = CNN(num_states, num_actions, lr=lr, history_length=history_length)
     target_net = CNNTargetNetwork(num_states, num_actions, lr=lr, history_length=history_length)

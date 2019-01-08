@@ -8,6 +8,9 @@ import numpy as np
 import argparse
 import os
 from datetime import datetime
+from tensorboard_evaluation import *
+from carracing_utils import *
+import json
 
 np.random.seed(0)
 
@@ -15,44 +18,50 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--agent_path", default=os.path.join(".", "models", "CarRacing-v0", "dqn_agent.ckpt"), type=str, nargs="?",
                         help="Path where the agent is located.")
-    # parser.add_argument("--verbose", action="store_true", default=False, help="Print episode statistics.")
-    # parser.add_argument("--show_frame_reward", default=10, type=int, nargs=1, help="Displays current reward every n frames (default = 10).")
-    # parser.add_argument("--render_frequency", default=5, type=int, nargs=1, help="The frequency of rendering the graphical output (default = 5).")
-    # parser.add_argument("--checkpoint_frequency", default=20, type=int, nargs=1, help="The frequency of creating and saving model checkpoints (default = 20).")
-    # parser.add_argument("--path_for_reloading", default=os.path.join(".", "models", "CarRacing-v0", "dqn_agent.ckpt"), type=str, nargs="?",
-    #                     help="Path where the agent is located.")
-    # parser.add_argument("--fullrun", action="store_true", default=False, help="Run until episode limit.")
     args = parser.parse_args()
 
     print("Starting test_carracing...")
 
+    tensorboard_dir=os.path.join(".", "tensorboard","CarRacing-v0")
+    tensorboard = Evaluation(os.path.join(tensorboard_dir, "test"),
+                             ["episode_reward", "straight", "left", "right", "accel", "brake"])
+
+
     env = gym.make("CarRacing-v0").unwrapped
 
-    history_length =  0
+    history_length =  1
 
     # Define networks and load agent
     # ....
     num_states = 96
     num_actions = 5
-    num_episodes = 500
 
     game_name = "CarRacing_v0"
-    q_net = CNN(num_states, num_actions, lr = 0.001)
-    target_net = CNNTargetNetwork(num_states, num_actions, lr = 0.001)
+    q_net = CNN(num_states, num_actions, history_length=history_length)
+    target_net = CNNTargetNetwork(num_states, num_actions, history_length=history_length)
 
     # init DQNAgent (see dqn/dqn_agent.py)
-    agent = DQNAgent(game_name, q_net, target_net, num_actions, batch_size=64, epsilon=0.1)
+    agent = DQNAgent(game_name, q_net, target_net, num_actions)
 
     # Load stored model
     agent.load(args.agent_path)
 
 
-    n_test_episodes = 15
+    n_test_episodes = 10
 
     episode_rewards = []
     for i in range(n_test_episodes):
-        stats = run_episode(env, agent, i, deterministic=True, do_training=False, testing=True, rendering=True)
+        stats = run_episode(env, agent, i, deterministic=True, do_training=False, testing=True, rendering=True, history_length=history_length)
         episode_rewards.append(stats.episode_reward)
+
+        tensorboard.write_episode_data(i, eval_dict={
+                "episode_reward" : stats.episode_reward,
+                "straight" : stats.get_action_usage(STRAIGHT),
+                "left" : stats.get_action_usage(LEFT),
+                "right" : stats.get_action_usage(RIGHT),
+                "accel" : stats.get_action_usage(ACCELERATE),
+                "brake" : stats.get_action_usage(BRAKE),
+            })
 
     # save results in a dictionary and write them into a .json file
     results = dict()
@@ -60,10 +69,12 @@ if __name__ == "__main__":
     results["mean"] = np.array(episode_rewards).mean()
     results["std"] = np.array(episode_rewards).std()
 
-    if not os.path.exists("./results"):
-        os.mkdir("./results")
 
-    fname = "./results/carracing_results_dqn-%s.json" % datetime.now().strftime("%Y%m%d-%H%M%S")
+    result_path = "./results/CarRacing-v0/"
+    if not os.path.exists(result_path):
+        os.mkdirs(result_path)
+
+    fname = result_path + "results_dqn-%s.json" % datetime.now().strftime("%Y%m%d-%H%M%S")
     fh = open(fname, "w")
     json.dump(results, fh)
 

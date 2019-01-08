@@ -33,7 +33,7 @@ if __name__ == "__main__":
 
     q_net = NeuralNetwork(num_states, num_actions, lr = 0.001)
     target_net = TargetNetwork(num_states, num_actions, lr = 0.001)
-    agent = DQNAgent(q_net, target_net, num_actions)
+    agent = DQNAgent("CarRacing-v0", q_net, target_net, num_actions)
     agent.load(args.agent_path)
 
     n_test_episodes = 15
