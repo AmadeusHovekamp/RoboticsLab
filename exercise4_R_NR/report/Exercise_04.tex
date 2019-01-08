@@ -134,6 +134,12 @@ minimize drives trough the valley.
 
 \subsection{CarRacing}
 
+\subsubsection{The network structure}
+We used a CCN that consists of two convolution layers (20 filters, 11 kernel size, stride 1), each followed by a max
+pooling (first: pool_size 2, stride 2; second: pool_size 2, stride 1) and a fully connected
+layer (128 units). The input layer size is 98 by 98 by history_length and output layer with 5 units.
+
+
 \begin{center}
     \begin{tabular}{ | l | l | l |l| l| l| l| l| l| l|}
     \hline
