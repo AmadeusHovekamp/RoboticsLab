@@ -19,12 +19,15 @@
 
 \textbf{\large{Laboratory - Deep Learning Lab, WS 2018/2019 - Exercise 4}}
 
-\textbf{\large{Submitted by: Amadeus Hovekamp,\\
-mail@amadeus-hovekamp.de,\\
-Matr. no: 4603934\\
+\textbf{\large{Submitted by:\\
+\\
 Amadeus Hovekamp,\\
 mail@amadeus-hovekamp.de,\\
-Matr. no: 4603934}}
+Matr. no: 4603934\\
+\\
+Hans Nübel,\\
+hans.nuebel@rwth-aachen.de,\\
+Matr. no: 4514598}}
 
 The repository with the source code can be found under the following link:\\
 \href{https://github.com/Schokokugel/RoboticsLab}
@@ -136,16 +139,17 @@ minimize drives trough the valley.
 
 \subsubsection{The network structure}
 We used a CCN that consists of two convolution layers (20 filters, 11 kernel size, stride 1), each followed by a max
-pooling (first: pool_size 2, stride 2; second: pool_size 2, stride 1) and a fully connected
-layer (128 units). The input layer size is 98 by 98 by history_length and output layer with 5 units.
+pooling (first: pool\_size 2, stride 2; second: pool\_size 2, stride 1) and a fully connected
+layer (128 units). The input layer size is 98 by 98 by history\_length and output layer with 5 units.
 
 
 \begin{center}
-    \begin{tabular}{ | l | l | l |l| l| l| l| l| l| l|}
+    \begin{tabular}{ | l | l | l | l | l | l | l | l |}
     \hline
-                            & \textbf{epochs} & \textbf{mean} & \textbf{std} & \textbf{max} & \textbf{min}  \\ \hline
-    \textbf{small data set} & 6   & 917.92      & 8.28      &   929.50    & 902.30  \\ \hline
-    \textbf{big data set}  & 36 & 891.40 & 39.48 & 931.70  & 796.20  \\ \hline
+                            & \textbf{1st run} & \textbf{2nd run} & \textbf{3rd run} &
+                            \textbf{4th run} & \textbf{5th run} & \textbf{6th run} & \textbf{7th run} \\ \hline
+    \textbf{epsilon}        &  0.2  &  0.15  &  0.1  &  0.05  &  0.04  &  0.03  &  0.05  \\ \hline
+    \textbf{max\_timesteps} &  150  &  200   &  300  &  300   &  450   &  700   &  1000  \\ \hline
     \end{tabular}
 \end{center}
 
