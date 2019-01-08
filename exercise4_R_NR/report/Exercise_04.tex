@@ -44,7 +44,7 @@ As the set up for this exercise was the same as for the last exercise, there wer
 
 All in all the implementation of the DQN went well, the provided components
 helped to implement it. We implemented some additional features that helped us
-training the network and generating the required data for generating the report.
+training the network and generating the required data for writing the report.
 
 
 The first runs were not successfull due to the small default learning
@@ -54,8 +54,8 @@ and \ref{CartPoleTestReward}.
 
 
 The total run had a length of 500 episodes, the reward for each episode is
-displayed by the dots in figure~\ref{CartPoleTrainEvalReward}. The orange line
-shows the evaluation reward after every tenth episode, averaged over 5 evaluation
+displayed by the black dots in figure~\ref{CartPoleTrainEvalReward}. The orange dots
+show the evaluation reward after every tenth episode, averaged over 5 evaluation
 runs using only deterministic actions.
 
 It took the agent about 120 episodes to learn how to prevent the pole from tilting
@@ -109,7 +109,7 @@ figures~\ref{MountainCarTrainEvalReward} and~\ref{MountainCarTestReward}.
 In figure~\ref{MountainCarTrainEvalReward} the training and evaluation rewards
 are displayed as in the CartPole environment. Here, already after 60
 episodes the network performs good. But later on again an oscillation behavior
-can be seen, though the bad performances are not dropping are not getting as bad
+can be seen, though the bad performances are not as bad
 as some performances for the CartPole. A reason for this difference is probably
 that the CartPole is more difficult, consisting of two tasks at the same time
 (balancing the pole and not drifting off to the side).
@@ -117,8 +117,8 @@ that the CartPole is more difficult, consisting of two tasks at the same time
 Finally, in figure~\ref{MountainCarTestReward} the test rewards for the
 solved model and the full run model are displayed. Here, we have defined solved
 as reaching an average score larger than -200 over 100 consecutive runs,
-similar so the definition as for the CartPole. In contrast to the CartPole,
-Solved scores higher on average but the Full Run, which is in turn better when
+similar to the definition as for the CartPole. In contrast to the CartPole,
+Solved scores higher on average. But the Full Run is in turn better when
 the starting conditions are favorable for its risky driving style trying to
 minimize drives trough the valley.
 
@@ -131,17 +131,29 @@ minimize drives trough the valley.
 \end{figure}
 
 
-
-
-
-
 \subsection{CarRacing}
 
 \subsubsection{The network structure}
+
 We used a CCN that consists of two convolution layers (20 filters, 11 kernel size, stride 1), each followed by a max
 pooling (first: pool\_size 2, stride 2; second: pool\_size 2, stride 1) and a fully connected
 layer (128 units). The input layer size is 98 by 98 by history\_length and output layer with 5 units.
+The history length had a value of 0 or 1. We also experimented with other network configurations
+(smaller kernel size / additional fully connected layer, long history length of 5), but the
+performance of these networks were worse.
 
+For the training we used a batch size of 64 and a learning rate o 0.001. 
+
+
+\subsubsection{Learning schedule}
+
+For training we defined a learning schedule, with different parameters for each run. The values for
+each training run can be seen in the following table. As suggested in the exercise, we adapted
+the length of the episodes, beginning with small values and increasing it over the trainig runs.
+For the exploration we adapted the percentage of the random actions, beginning with a high value of
+20 percent and dropping it to over the runs. For values smaller tha  percent the agent seems to loose
+$robustness$, so we increased the value again to 5 in the end. For the distribution of the actions we
+went actually well with an uniform distribution when exluding the STRAIGHT action.
 
 \begin{center}
     \begin{tabular}{ | l | l | l | l | l | l | l | l |}
@@ -152,6 +164,9 @@ layer (128 units). The input layer size is 98 by 98 by history\_length and outpu
     \textbf{max\_timesteps} &  150  &  200   &  300  &  300   &  450   &  700   &  1000  \\ \hline
     \end{tabular}
 \end{center}
+
+
+\subsubsection{Results}
 
 \begin{figure}[H]
   \begin{center}
@@ -169,10 +184,5 @@ layer (128 units). The input layer size is 98 by 98 by history\_length and outpu
   \end{center}
 \end{figure}
 
-
-\subsection{An improved network}
-
-
-\section{Influence of hyperparameters}
 
 \end{document}
